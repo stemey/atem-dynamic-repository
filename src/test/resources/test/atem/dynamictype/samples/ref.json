@@ -1,0 +1,9 @@
+{
+  "attributes":[
+  	{
+  		"code":"ref",
+  		"type":"ref",
+  		"schemaUrl":"/meta/ref_primitive_string"
+  	}
+  ]
+}
