@@ -1,21 +1,10 @@
 {
-	"code":"embedded",
+	"code":"primitive_string",
 	"group":{
 		"attributes":[
 			{
-				"code":"embedded",
-				"type":"object",
-				"group":{
-					"attributes":[
-						{
-							"code":"text",
-							"type":"string"
-						}
-						
-					]
-					
-				}
-				
+				"code":"url",
+				"type":"string"
 			},
 			{
 				"code":"url",
@@ -29,8 +18,6 @@
 				"code":"identifier",
 				"type":"string"
 			}
-			
 		]
-		
 	}
 }

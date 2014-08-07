@@ -18,47 +18,27 @@
 
 
 	<!-- Scans for application @Components to deploy -->
-
-	<import resource="classpath:/atem/jcr/entitytype-example.xml" />
-	<import resource="classpath:/atem/jackson/entitytype.xml" />
-	<import resource="classpath:/atem/dynamictype/gform.xml" />
-	<import resource="classpath:/meta/utility/transform-complete.xml" />
-	<import resource="classpath:/atem/jcr/jcr-entitytype.xml"/>
-
-	
-
-	<bean id="atem-repository"
-		class="org.atemsource.atem.impl.common.EntityTypeRepositoryImpl"
-		init-method="init">
-		<property name="repositories">
-			<list>
-				<ref bean="atem-entityType-repository" />
-				<ref bean="atem-attribute-repository" />
-				<ref bean="atem-jcr-repository" />
-				<ref bean="atem-json-repository" />
-				<ref bean="atem-transformation-subrepository"/>
-			</list>
+	<bean id="jcr-gformEntityTypeFactory" parent="atem-gformEntityTypeFactory"
+		class="org.atemsource.dynamic.Cms4AppsGformEntityTypeFactory">
+		<property name="dynamicEntityTypeRepository" ref="atem-jcr-repository" />
+		<property name="jsonEntityTypeRepository" ref="atem-json-repository" />
+		<property name="schemaUriPrefix" value="/meta/" />
+		<property name="transformationBuilderFactory" ref="atem-utility-transformationBuilderFactory" />
+		<property name="typeCodeConverter">
+			<bean class="org.atemsource.dynamic.JcrTypeCodeConverter" />
+		</property>
+		<property name="attributeCodeConverter">
+			<bean class="org.atemsource.dynamic.JcrAttributeCodeConverter" />
 		</property>
 	</bean>
-	
-	<bean class="org.atemsource.dynamic.RestService">
-		<property name="factory" ref="jcr-gformEntityTypeFactory"/>
-		<property name="repository" ref="jcr-repository"/>
-		<property name="objectMapper">
-			<bean class="org.codehaus.jackson.map.ObjectMapper"/>
-		</property>
+
+	<bean class="org.atemsource.jcr.service.JcrCrudService">
+		<property name="repository" ref="jcr-repository" />
 	</bean>
-	
-	
-	
-	<bean id="atem-json-repository" parent="atem-abstract-json-repository">
-		<property name="typeProperty" value="template"/>
+
+	<bean id="atem-jcr-repository" parent="atem-abstract-jcr-repository"
+		class="org.atemsource.jcr.JcrEntityTypeRepository">
+		<property name="typeProperty" value="template" />
 	</bean>
-	
-
-
-
-
-
 
 </beans>

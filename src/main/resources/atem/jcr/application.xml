@@ -20,12 +20,12 @@
 	<!-- Scans for application @Components to deploy -->
 
 	<import resource="classpath:/atem/jcr/entitytype-example.xml" />
-	<import resource="classpath:/atem/jackson/entitytype.xml" />
+	<import resource="classpath:/atem/jackson/entitytype-example.xml" />
 	<import resource="classpath:/atem/dynamictype/gform.xml" />
 	<import resource="classpath:/meta/utility/transform-complete.xml" />
-	<import resource="classpath:/atem/jcr/jcr-entitytype.xml"/>
+	<import resource="jcr-entitytype.xml" />
 
-	
+
 
 	<bean id="atem-repository"
 		class="org.atemsource.atem.impl.common.EntityTypeRepositoryImpl"
@@ -36,29 +36,66 @@
 				<ref bean="atem-attribute-repository" />
 				<ref bean="atem-jcr-repository" />
 				<ref bean="atem-json-repository" />
-				<ref bean="atem-transformation-subrepository"/>
+				<ref bean="atem-transformation-subrepository" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="restService" class="org.atemsource.dynamic.RestService">
+		<property name="factory" ref="jcr-gformEntityTypeFactory" />
+		<property name="repository" ref="jcr-repository" />
+		<property name="objectMapper">
+			<bean class="org.codehaus.jackson.map.ObjectMapper" />
+		</property>
+	</bean>
+
+	<bean id="jcr-repository" class="org.atemsource.jcr.InMemoryTestRepository">
+	</bean>
+
+	<bean class="org.atemsource.dynamic.HttpRestService">
+		<property name="restService" ref="restService" />
+		<property name="basePath" value="/schema" />
+		<property name="cors">
+			<bean class="org.atemsource.atem.service.meta.service.Cors" />
+		</property>
+		<property name="objectMapper">
+			<bean class="org.codehaus.jackson.map.ObjectMapper" />
+		</property>
+	</bean>
+
+
+	<bean id="refResolver" class="org.atemsource.atem.service.refresolver.RefResolverImpl"
+		init-method="initialize">
+		<property name="entityTypeRepository" ref="atem-repository" />
+		<property name="uriPrefix" value="/entity" />
+	</bean>
+
+	<bean id="converterFactory"
+		class="org.atemsource.atem.utility.transform.impl.converter.ConverterFactoryImpl">
+		<property name="javaConverters">
+			<list>
+				<ref bean="atem-dateConverter" />
+			</list>
+		</property>
+		<property name="factories">
+			<list>
+				<bean
+					class="org.atemsource.atem.utility.transform.impl.converter.EnumToStringConverterFactory" />
 			</list>
 		</property>
 	</bean>
 	
-	<bean class="org.atemsource.dynamic.RestService">
-		<property name="factory" ref="jcr-gformEntityTypeFactory"/>
-		<property name="repository" ref="jcr-repository"/>
+	
+	<!-- rest service providing crud services on entities -->
+	<bean id="entityRestService" class="org.atemsource.atem.service.entity.EntityRestService">
 		<property name="objectMapper">
-			<bean class="org.codehaus.jackson.map.ObjectMapper"/>
+			<bean class="org.codehaus.jackson.map.ObjectMapper" />
 		</property>
+		<property name="idConverterfactory">
+			<ref bean="converterFactory" />
+		</property>
+		<property name="refResolver" ref="refResolver" />
+		<property name="entityTypeRepository" ref="atem-repository" />
 	</bean>
-	
-	
-	
-	<bean id="atem-json-repository" parent="atem-abstract-json-repository">
-		<property name="typeProperty" value="template"/>
-	</bean>
-	
-
-
-
-
-
 
 </beans>

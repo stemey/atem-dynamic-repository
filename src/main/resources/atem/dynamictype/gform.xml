@@ -24,5 +24,6 @@
 				<bean class="org.atemsource.dynamic.primitive.PrimitiveAttributeCreator"/>
 			</list>
 		</property>
+		
 	</bean>
 </beans>

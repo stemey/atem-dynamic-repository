@@ -1,9 +1,24 @@
 {
-  "attributes":[
-  	{
-  		"code":"ref",
-  		"type":"ref",
-  		"schemaUrl":"/meta/ref_primitive_string"
-  	}
-  ]
+	"code":"ref",
+	"group":{
+		"attributes":[
+			{
+				"code":"ref",
+				"type":"ref",
+				"schemaUrl":"/meta/primitive_string"
+			},
+			{
+				"code":"url",
+				"type":"string"
+			},
+			{
+				"code":"template",
+				"type":"string"
+			},
+			{
+				"code":"identifier",
+				"type":"string"
+			}
+		]
+	}
 }

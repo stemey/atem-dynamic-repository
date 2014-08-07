@@ -1,8 +1,23 @@
 {
-  "attributes":[
-  	{
-  		"code":"text",
-  		"type":"string"
-  	}
-  ]
+	"code":"primitive_string",
+	"group":{
+		"attributes":[
+			{
+				"code":"text",
+				"type":"string"
+			},
+			{
+				"code":"url",
+				"type":"string"
+			},
+			{
+				"code":"template",
+				"type":"string"
+			},
+			{
+				"code":"identifier",
+				"type":"string"
+			}
+		]
+	}
 }

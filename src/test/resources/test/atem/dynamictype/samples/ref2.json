@@ -1,21 +1,11 @@
 {
-	"code":"embedded",
+	"code":"ref",
 	"group":{
 		"attributes":[
 			{
-				"code":"embedded",
-				"type":"object",
-				"group":{
-					"attributes":[
-						{
-							"code":"text",
-							"type":"string"
-						}
-						
-					]
-					
-				}
-				
+				"code":"ref2",
+				"type":"ref",
+				"schemaUrl":"/meta/primitive_string"
 			},
 			{
 				"code":"url",
@@ -29,8 +19,6 @@
 				"code":"identifier",
 				"type":"string"
 			}
-			
 		]
-		
 	}
 }
