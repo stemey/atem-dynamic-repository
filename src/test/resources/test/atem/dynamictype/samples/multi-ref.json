@@ -1,0 +1,20 @@
+{
+	"code":"multi-ref",
+	"group":{
+		"attributes":[
+			{
+				"code":"ref",
+				"type":"multi-ref",
+				"idProperty":"_id",
+				"searchProperty":"url",
+				"url":"/page",
+				"usage":"html",
+				"typeProperty":"template",
+				"schemas":[
+					"test"
+				],
+				"editor":"multi-page-ref"
+			}
+		]
+	}
+}

@@ -3,9 +3,10 @@
 	"group":{
 		"attributes":[
 			{
-				"code":"ref2",
+				"editor":"template-ref",
+				"code":"ref",
 				"type":"ref",
-				"schemaUrl":"primitive_string"
+				"template":{"$ref":"primitive_string"}
 			},
 			{
 				"code":"url",

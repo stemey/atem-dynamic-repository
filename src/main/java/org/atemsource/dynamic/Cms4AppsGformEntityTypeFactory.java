@@ -24,9 +24,7 @@ public class Cms4AppsGformEntityTypeFactory extends
 	}
 
 	public JavaConverter<?, ?> getConverter(String code) {
-		if (code.equals("xidentifier")) {
-			return new JcrIdentifierConverter();
-		} else if (code.equals("template")) {
+		 if (code.equals("template")) {
 			return (JavaConverter<?, ?>) new JcrTypeCodeConverter();
 		} else {
 			return null;

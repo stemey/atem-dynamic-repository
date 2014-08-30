@@ -1,11 +1,13 @@
 {
-	"code":"ref",
+	"code":"list_string",
 	"group":{
 		"attributes":[
 			{
-				"code":"ref2",
-				"type":"ref",
-				"schemaUrl":"primitive_string"
+				"code":"texts",
+				"type":"array",
+				"element":{
+					"type":"string"
+				}
 			},
 			{
 				"code":"url",

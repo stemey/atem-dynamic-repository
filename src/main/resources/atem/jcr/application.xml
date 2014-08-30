@@ -20,13 +20,15 @@
 	<!-- Scans for application @Components to deploy -->
 
 	<import resource="classpath:/atem/jcr/entitytype-example.xml" />
-	<import resource="classpath:/atem/jackson/entitytype-example.xml" />
-	<import resource="classpath:/atem/dynamictype/gform.xml" />
+	<import resource="classpath:/atem/jackson/entitytype.xml" />
 	<import resource="classpath:/meta/utility/transform-complete.xml" />
 	<import resource="jcr-entitytype.xml" />
 
 
-
+	<bean id="atem-json-repository" parent="atem-abstract-json-repository">
+		<property name="typeProperty" value="template"/>
+	</bean>
+	
 	<bean id="atem-repository"
 		class="org.atemsource.atem.impl.common.EntityTypeRepositoryImpl"
 		init-method="init">
@@ -49,7 +51,7 @@
 		</property>
 	</bean>
 
-	<bean id="jcr-repository" class="org.atemsource.jcr.InMemoryTestRepository">
+	<bean id="jcr-repository" class="org.atemsource.jcr.MongoDbJcrRepository">
 	</bean>
 
 	<bean class="org.atemsource.dynamic.HttpRestService">

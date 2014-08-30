@@ -5,7 +5,7 @@
 			{
 				"code":"ref",
 				"type":"ref",
-				"schemaUrl":"/meta/primitive_string"
+				"schemaUrl":"primitive_string"
 			},
 			{
 				"code":"url",

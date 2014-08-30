@@ -15,6 +15,7 @@
            http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.5.xsd
            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
 
+	<import resource="classpath:/atem/dynamictype/gform.xml" />
 
 
 	<!-- Scans for application @Components to deploy -->
@@ -22,7 +23,7 @@
 		class="org.atemsource.dynamic.Cms4AppsGformEntityTypeFactory">
 		<property name="dynamicEntityTypeRepository" ref="atem-jcr-repository" />
 		<property name="jsonEntityTypeRepository" ref="atem-json-repository" />
-		<property name="schemaUriPrefix" value="/meta/" />
+		<property name="schemaUriPrefix" value="" />
 		<property name="transformationBuilderFactory" ref="atem-utility-transformationBuilderFactory" />
 		<property name="typeCodeConverter">
 			<bean class="org.atemsource.dynamic.JcrTypeCodeConverter" />

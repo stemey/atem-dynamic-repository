@@ -79,7 +79,7 @@ public class HttpRestService {
 
 			BufferedReader reader = req.getReader();
 			ObjectNode jsonNode = (ObjectNode) objectMapper.readTree(reader);
-			Serializable id = restService.create(jsonNode);
+			String id = restService.create(jsonNode);
 			objectMapper.writeValue(resp.getWriter(), id);
 
 		} catch (Exception e) {
@@ -106,11 +106,11 @@ public class HttpRestService {
 		String uri = req.getRequestURI();
 		try {
 			try {
-				if (uri.equals(basePath) || uri.equals(basePath+"/")) {
-					String query = req.getParameter("query");
+				if (uri.equals(basePath) || uri.equals(basePath + "/")) {
+					String query = req.getParameter("name");
 					final PrintWriter writer = resp.getWriter();
 					writer.write("[");
-					Callback callback=new Callback<Iterator<ObjectNode>>() {
+					Callback callback = new Callback<Iterator<ObjectNode>>() {
 
 						@Override
 						public void process(Iterator<ObjectNode> t) {
@@ -122,20 +122,25 @@ public class HttpRestService {
 							}
 						}
 					};
-					
-					if (query!=null) {
+
+					if (query != null) {
 						restService.findSchemas(query, callback);
-					}else {
-						restService.getSchemas( callback);
+					} else {
+						restService.getSchemas(callback);
 					}
-					
+
 					writer.write("]");
 
 				} else {
 					String id = parseId(uri);
-					//String jcrId=new JcrTypeCodeConverter().convertBA(id, null);
+					// String jcrId=new JcrTypeCodeConverter().convertBA(id,
+					// null);
 					ObjectNode schema = restService.getSchema(id);
-					resp.getWriter().write(schema.toString());
+					if (schema == null) {
+						resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+					} else {
+						resp.getWriter().write(schema.toString());
+					}
 				}
 
 			} catch (Exception e) {

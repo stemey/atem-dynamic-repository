@@ -3,6 +3,7 @@ package org.atemsource.dynamic;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -15,6 +16,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
@@ -27,6 +29,7 @@ import javax.jcr.version.VersionException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.log4j.Logger;
 import org.atemsource.atem.api.infrastructure.exception.BusinessException;
 import org.atemsource.atem.api.infrastructure.exception.TechnicalException;
 import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
@@ -35,8 +38,12 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
+import org.eclipse.jetty.util.log.Log;
 
 public class RestService {
+	private static final String SCHEMA_PROPERTY = "schema";
+
+	private static Logger logger = Logger.getLogger(RestService.class);
 	public interface Callback<T> {
 		public void process(T t);
 	}
@@ -67,7 +74,7 @@ public class RestService {
 
 	private Session createSession() throws LoginException,
 			NoSuchWorkspaceException, RepositoryException {
-		return repository.login("default");
+		return repository.login("default");//new SimpleCredentials("admin","admin".toCharArray()),"default");
 	}
 
 	@PostConstruct
@@ -134,7 +141,7 @@ public class RestService {
 		if (next == null) {
 			return null;
 		} else {
-			String schema = next.getProperty("schema").getString();
+			String schema = next.getProperty(SCHEMA_PROPERTY).getString();
 			ObjectNode schemaNode = (ObjectNode) objectMapper.readTree(schema);
 			// schemaNode.put("id", next.getProperty("code").getString());
 			return schemaNode;
@@ -143,9 +150,9 @@ public class RestService {
 
 	public String create(ObjectNode schema) {
 		try {
-			Serializable id = createSchema(schema);
 			EntityTypeTransformation<?, ObjectNode> transformation = factory
 					.createType(schema);
+			createSchema(schema);
 			return transformation.getEntityTypeB().getCode();
 		} catch (Exception e) {
 			throw new TechnicalException("cannot create schema ", e);
@@ -166,7 +173,7 @@ public class RestService {
 			Node schemaNode = session.getNode(schemaPath);
 			Node node = schemaNode.addNode(UUID.randomUUID().toString(),
 					NodeType.NT_UNSTRUCTURED);
-			node.setProperty("schema", schema.toString());
+			node.setProperty(SCHEMA_PROPERTY, schema.toString());
 			JsonNode nameNode = schema.get("name");
 			if (nameNode != null) {
 				node.setProperty("name", nameNode.getTextValue());
@@ -193,7 +200,11 @@ public class RestService {
 		QueryResult queryResult = query.execute();
 		NodeIterator nodes = queryResult.getNodes();
 		if (nodes.hasNext()) {
-			return nodes.nextNode();
+			Node result= nodes.nextNode();
+			if (nodes.hasNext()) {
+				logger.warn("more than one schema for "+id);
+			}
+			return result;
 		} else {
 			return null;
 		}
@@ -221,12 +232,13 @@ public class RestService {
 		Session session = createSession();
 		try {
 			Node node = getByTypeCode(session, id);
-			node.setProperty("schema", schema.toString());
+			node.setProperty(SCHEMA_PROPERTY, schema.toString());
 			JsonNode nameNode = schema.get("name");
 			if (nameNode != null) {
 				node.setProperty("name", nameNode.getTextValue());
 			}
-			// factory.updateType(id, schema);
+			logger.debug("updated schema "+id);
+			 //factory.updateType(id, schema);
 			session.save();
 		} finally {
 			session.logout();
@@ -269,7 +281,7 @@ public class RestService {
 									+ "%' and (name like $name or code like $name)",
 							Query.JCR_SQL2);
 			Value nameValue = session.getValueFactory().createValue(
-					"jcr:" + name + "%");
+					"jcr:" + name.replace('*', '%'));
 			query.bindValue("name", nameValue);
 			QueryResult queryResult = query.execute();
 			callback.process(new SchemaIterator(queryResult.getNodes()));

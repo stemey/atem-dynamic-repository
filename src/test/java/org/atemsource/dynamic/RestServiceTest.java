@@ -62,7 +62,7 @@ public class RestServiceTest {
 	public void testCreate() throws JsonProcessingException, IOException {
 		ObjectNode gform = loadGform("primitive_string.json");
 		String id = (String) restService.create(gform);
-		Assert.assertNotNull(id);
+		Assert.assertEquals("primitive_string",id);
 		EntityType<?> entityType = entityTypeRepository.getEntityType(id);
 		Assert.assertTrue(entityType instanceof JsonEntityTypeImpl);
 
@@ -107,7 +107,7 @@ public class RestServiceTest {
 	public void testFindSchemas() throws JsonProcessingException, IOException {
 		restService.create(loadGform("embedded.json"));
 		restService.create(loadGform("ref.json"));
-		restService.findSchemas("emb", new Callback<Iterator<ObjectNode>>() {
+		restService.findSchemas("emb*", new Callback<Iterator<ObjectNode>>() {
 
 			@Override
 			public void process(Iterator<ObjectNode> schemas) {

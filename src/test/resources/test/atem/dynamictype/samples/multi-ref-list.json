@@ -1,0 +1,27 @@
+{
+	"code":"multi-ref-list",
+	"group":{
+		"attributes":[
+			{
+				"code":"refs",
+				"type":"array",
+				"element":{
+					"type":"multi-ref",
+					"idProperty":"_id",
+					"searchProperty":"url",
+					"url":"/page",
+					"usage":"html",
+					"typeProperty":"template",
+					"schemas":[
+						"test"
+					]
+					
+				}
+				
+			}
+			
+		]
+		
+	}
+	
+}

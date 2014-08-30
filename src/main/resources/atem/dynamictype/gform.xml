@@ -1,29 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:jee="http://www.springframework.org/schema/jee"
-	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:aop="http://www.springframework.org/schema/aop"
 	xsi:schemaLocation="
            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
            http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.5.xsd
            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
 
-	
 
 
-	<bean id="atem-gformEntityTypeFactory" abstract="true" class="org.atemsource.dynamic.primitive.GformEntityTypeFactory">
+
+	<bean id="atem-gformEntityTypeFactory" abstract="true"
+		class="org.atemsource.dynamic.primitive.GformEntityTypeFactory">
+		<property name="entityTypeRepository" ref="atem-repository" />
 		<property name="attributeCreators">
 			<list>
+				<bean
+					class="org.atemsource.dynamic.primitive.EmbeddedCollectionAttributeCreator" />
+				<bean
+					class="org.atemsource.dynamic.primitive.BinaryAttributeCreator" />
+				<bean
+					class="org.atemsource.dynamic.primitive.MultiRefListAttributeCreator" />
+				<bean
+					class="org.atemsource.dynamic.primitive.TemplateReferenceAttributeCreator" />
+				<bean class="org.atemsource.dynamic.primitive.MultiRefAttributeCreator" />
+				<bean
+					class="org.atemsource.dynamic.primitive.PrimitiveListAttributeCreator" />
 				<bean class="org.atemsource.dynamic.primitive.EmbeddedAttributeCreator">
 				</bean>
-				<bean class="org.atemsource.dynamic.primitive.EmbeddedCollectionAttributeCreator">
+				<bean
+					class="org.atemsource.dynamic.primitive.EmbeddedCollectionAttributeCreator">
 				</bean>
 				<bean class="org.atemsource.dynamic.primitive.ReferenceAttributeCreator"></bean>
-				<bean class="org.atemsource.dynamic.primitive.PrimitiveAttributeCreator"/>
+				<bean class="org.atemsource.dynamic.primitive.PrimitiveAttributeCreator" />
 			</list>
 		</property>
-		
+
 	</bean>
 </beans>

@@ -1,11 +1,19 @@
 {
-	"code":"ref",
+	"code":"embedded-list",
 	"group":{
 		"attributes":[
 			{
-				"code":"ref2",
-				"type":"ref",
-				"schemaUrl":"primitive_string"
+				"code":"embeddeds",
+				"type":"array",
+				"group":{
+					"attributes":[
+						{
+							"code":"text",
+							"type":"string"
+						}
+					]
+				}
+				
 			},
 			{
 				"code":"url",
@@ -19,6 +27,8 @@
 				"code":"identifier",
 				"type":"string"
 			}
+			
 		]
+		
 	}
 }

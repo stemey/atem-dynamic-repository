@@ -37,7 +37,9 @@ public class EntityRestServiceTest {
 	@Inject
 	private RestService restService;
 
-	private String schemaId="primitive_string";
+	private String schemaId="base";
+	
+	private String jsonTypeCode="primitive_string";
 
 	private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -59,10 +61,13 @@ public class EntityRestServiceTest {
 	@Test
 	public void testCrud() throws IOException, ServletException {
 		String id = create("/index.html");
-		get(id,"hallo");
+		create("/xxx.html");
+		create("/xyy.html");
+		get("/index.html",id,"hallo");
 		update("bye");
-		get(id,"bye");
-		//getCollection();
+		get("/index.html",id,"bye");
+		getCollection();
+		findByUrl();
 		delete(id);
 	}
 	
@@ -149,7 +154,7 @@ public class EntityRestServiceTest {
 				"UTF-8"));
 	}
 
-	public void get(String id, String text) throws ServletException, IOException {
+	public void get(String url,String id, String text) throws ServletException, IOException {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		final String uri = "/entity/" + schemaId + "/"+id;
@@ -161,9 +166,9 @@ public class EntityRestServiceTest {
 		String result = new String(response.getContentAsByteArray(),
 				"UTF-8");
 		JsonNode node = objectMapper.readTree(result);
-		Assert.assertEquals(schemaId, node.get("template").getTextValue());
+		Assert.assertEquals(jsonTypeCode, node.get("template").getTextValue());
 		Assert.assertEquals(id, node.get("identifier").getTextValue());
-		Assert.assertEquals(id, node.get("url").getTextValue());
+		Assert.assertEquals(url, node.get("url").getTextValue());
 		Assert.assertEquals(text, node.get("text").getTextValue());
 	}
 
@@ -178,7 +183,22 @@ public class EntityRestServiceTest {
 		Assert.assertEquals(200, response.getStatus());
 		String content = response.getContentAsString();
 		ArrayNode result = (ArrayNode) objectMapper.readTree(content);
-		Assert.assertEquals(1, result.size());
+		Assert.assertEquals(3, result.size());
+	}
+	
+	public  void findByUrl() throws ServletException, IOException {
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		final String uri = "/entity/"+schemaId;
+		request.setRequestURI(uri);
+		request.addParameter("url", "/x*");
+
+		entityRestService.doGet(request, response);
+
+		Assert.assertEquals(200, response.getStatus());
+		String content = response.getContentAsString();
+		ArrayNode result = (ArrayNode) objectMapper.readTree(content);
+		Assert.assertEquals(2, result.size());
 	}
 
 	public  String create(String url) throws IOException {
@@ -191,18 +211,18 @@ public class EntityRestServiceTest {
 		final String uri = "/entity/" + schemaId ;
 		request.setRequestURI(uri);
 		entityRestService.doPost(request, response);
-
+		
 		Assert.assertEquals(200, response.getStatus());
-		Assert.assertEquals(url, new String(response.getContentAsByteArray(),
-				"UTF-8"));
-		return url;
+		String generatedId = objectMapper.readTree(response.getContentAsByteArray()).getTextValue();
+		Assert.assertNotNull(url, generatedId);
+		return generatedId;
 
 	}
 
 	private ObjectNode createPage(String url,String text) {
 		ObjectNode node = objectMapper.createObjectNode();
 		node.put("url", url);
-		node.put("template", schemaId);
+		node.put("template", jsonTypeCode);
 		node.put("text", text);
 		return node;
 	}

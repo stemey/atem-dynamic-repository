@@ -1,11 +1,10 @@
 {
-	"code":"ref",
+	"code":"binary",
 	"group":{
 		"attributes":[
 			{
-				"code":"ref2",
-				"type":"ref",
-				"schemaUrl":"primitive_string"
+				"code":"binary",
+				"type":"binary"
 			},
 			{
 				"code":"url",

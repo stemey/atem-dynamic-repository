@@ -4,19 +4,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.jcr.Node;
 
+import org.atemsource.atem.api.EntityTypeRepository;
 import org.atemsource.atem.api.infrastructure.exception.BusinessException;
 import org.atemsource.atem.api.type.EntityType;
 import org.atemsource.atem.api.type.EntityTypeBuilder;
+import org.atemsource.atem.api.type.Type;
 import org.atemsource.atem.spi.DynamicEntityTypeSubrepository;
 import org.atemsource.atem.utility.binding.AttributeConverter;
 import org.atemsource.atem.utility.transform.api.DynamicTypeTransformationBuilder;
 import org.atemsource.atem.utility.transform.api.JavaConverter;
 import org.atemsource.atem.utility.transform.api.JavaUniConverter;
 import org.atemsource.atem.utility.transform.api.TransformationBuilderFactory;
+import org.atemsource.atem.utility.transform.api.TypeTransformationBuilder;
 import org.atemsource.atem.utility.transform.api.meta.DerivedType;
 import org.atemsource.atem.utility.transform.impl.EntityTypeTransformation;
+import org.atemsource.dynamic.JcrTypeCodeConverter;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -27,8 +32,39 @@ public class GformEntityTypeFactory<T> {
 	private DynamicEntityTypeSubrepository<T> dynamicEntityTypeRepository;
 	private DynamicEntityTypeSubrepository<ObjectNode> jsonEntityTypeRepository;
 	private Map<String, EntityTypeBuilder> builders = new HashMap<String, EntityTypeBuilder>();
+	private Map<String, DynamicTypeTransformationBuilder> transformationBuilders = new HashMap<String, DynamicTypeTransformationBuilder>();
 	private TransformationBuilderFactory transformationBuilderFactory;
 	private JavaConverter<String, String> typeCodeConverter;
+	private String schemaUriPrefix;
+	private EntityType<?> sourceBaseType;
+	private EntityType<?> targetBaseType;
+	private String baseTypeCode=JcrTypeCodeConverter.JSON_PREFIX+"base";
+	private EntityTypeTransformation<?, Object> baseTransformation;
+	private EntityTypeRepository entityTypeRepository;
+	
+	public void setEntityTypeRepository(EntityTypeRepository entityTypeRepository) {
+		this.entityTypeRepository = entityTypeRepository;
+	}
+
+	@PostConstruct
+	public void initialize(){
+		EntityTypeBuilder builder = dynamicEntityTypeRepository.createBuilder(typeCodeConverter.convertBA(baseTypeCode, null));
+		//builder.addSingleAttribute("identifier", String.class);
+		//builder.addSingleAttribute("template", String.class);
+		//builder.addSingleAttribute("path", String.class);
+		this.sourceBaseType=builder.createEntityType();
+		
+		EntityTypeBuilder typeBuilder = jsonEntityTypeRepository.createBuilder(baseTypeCode);
+		TypeTransformationBuilder<?, Object> transformationBuilder = transformationBuilderFactory.create(sourceBaseType,typeBuilder );
+		transformationBuilder.transform().from("identifier").to("identifier");
+		transformationBuilder.transform().from("path").to("url");
+		transformationBuilder.transform().from("template").to("template").convert(new JcrTypeCodeConverter());
+		this.baseTransformation=transformationBuilder.buildTypeTransformation();
+		targetBaseType=typeBuilder.getReference();
+		
+		
+			
+	}
 
 	public void setAttributeCreators(List<AttributeCreator> attributeCreators) {
 		this.attributeCreators = attributeCreators;
@@ -47,7 +83,6 @@ public class GformEntityTypeFactory<T> {
 		return entityTypeBuilder;
 	}
 
-	private String schemaUriPrefix;
 
 	public void setDynamicEntityTypeRepository(
 			DynamicEntityTypeSubrepository<T> dynamicEntityTypeRepository) {
@@ -61,13 +96,17 @@ public class GformEntityTypeFactory<T> {
 	public <T> EntityType<T> getEntityTypeBySchemaUri(String schemaUrl) {
 		if (schemaUrl.startsWith(schemaUriPrefix)) {
 			String typeCode = getTypeCode(schemaUrl);
-			EntityTypeBuilder builder = getBuilder(typeCodeConverter.convertBA(
-					typeCode, null));
-			// TODO maybe it is a type from a different repository
-			return (EntityType<T>) builder.getReference();
+			return getEntityType(typeCode);
 		} else {
 			throw new IllegalArgumentException("invalid schemaUrl " + schemaUrl);
 		}
+	}
+
+	public <T> EntityType<T> getEntityType(String typeCode) {
+		EntityTypeBuilder builder = getBuilder(typeCodeConverter.convertBA(
+				typeCode, null));
+		// TODO maybe it is a type from a different repository
+		return (EntityType<T>) builder.getReference();
 	}
 
 	private String getTypeCode(String schemaUrl) {
@@ -79,12 +118,16 @@ public class GformEntityTypeFactory<T> {
 		if (builders.get(typeCode) == null) {
 			DynamicTypeTransformationBuilder<T, ObjectNode> builder = createBuilder(typeCode);
 			addGroup(schema, builder);
+			builder.includeSuper(baseTransformation);
 			return builder.buildTypeTransformation();
 		} else {
-			DynamicTypeTransformationBuilder<T, ObjectNode> builder = replaceBuilder(typeCode);
-			addGroup(schema, builder);
-			return builder.buildTypeTransformation();
+//			DynamicTypeTransformationBuilder<T, ObjectNode> builder = replaceBuilder(typeCode);
+//			builder.includeSuper(baseTransformation);
+//			addGroup(schema, builder);
+//			return builder.buildTypeTransformation();
+			throw new IllegalStateException("type "+typeCode+" already exists");
 		}
+		
 	}
 
 	private EntityTypeBuilder createSourceTypeBuilder(String typeCode) {
@@ -92,24 +135,30 @@ public class GformEntityTypeFactory<T> {
 		EntityTypeBuilder builder = builders.get(typeCode);
 		if (builder == null) {
 			builder = dynamicEntityTypeRepository.createBuilder(typeCode);
+			builder.superType(sourceBaseType);
 			builders.put(typeCode, builder);
 		}
 		return builder;
 	}
 
 	private EntityTypeBuilder createTargetTypeBuilder(String typeCode) {
-		return jsonEntityTypeRepository.createBuilder(typeCode);
+		EntityTypeBuilder createBuilder = jsonEntityTypeRepository.createBuilder(typeCode);
+		createBuilder.superType(targetBaseType);
+		return createBuilder;
 	}
 
 	private EntityTypeBuilder replaceSourceTypeBuilder(String typeCode) {
 		EntityTypeBuilder builder = dynamicEntityTypeRepository
 				.replaceBuilder(typeCode);
+		builder.superType(sourceBaseType);
 		builders.put(typeCode, builder);
 		return builder;
 	}
 
 	private EntityTypeBuilder replaceTargetTypeBuilder(String typeCode) {
-		return jsonEntityTypeRepository.replaceBuilder(typeCode);
+		EntityTypeBuilder replaceBuilder = jsonEntityTypeRepository.replaceBuilder(typeCode);
+		replaceBuilder.superType(targetBaseType);
+		return replaceBuilder;
 	}
 
 	public void setJsonEntityTypeRepository(
@@ -177,10 +226,17 @@ public class GformEntityTypeFactory<T> {
 
 	public DynamicTypeTransformationBuilder<T, ObjectNode> createBuilder(
 			String typeCode) {
+		
 		String sourceTypeCode = typeCodeConverter.convertBA(typeCode, null);
-		return transformationBuilderFactory.create(
+		String transformationKey = sourceTypeCode+"::"+typeCode;
+		DynamicTypeTransformationBuilder dynamicTypeTransformationBuilder = transformationBuilders.get(transformationKey);
+		if (dynamicTypeTransformationBuilder==null) {
+			dynamicTypeTransformationBuilder= transformationBuilderFactory.create(
 				createSourceTypeBuilder(sourceTypeCode),
 				createTargetTypeBuilder(typeCode));
+			transformationBuilders.put(transformationKey, dynamicTypeTransformationBuilder);
+		}
+		return dynamicTypeTransformationBuilder;
 
 	}
 
@@ -195,6 +251,7 @@ public class GformEntityTypeFactory<T> {
 
 	public void clear() {
 		builders.clear();
+		transformationBuilders.clear();
 		jsonEntityTypeRepository.clear();
 		dynamicEntityTypeRepository.clear();
 	}
@@ -203,6 +260,7 @@ public class GformEntityTypeFactory<T> {
 			ObjectNode schema) {
 		DynamicTypeTransformationBuilder<T, ObjectNode> builder = replaceBuilder(typeCode);
 		addGroup(schema, builder);
+		builder.includeSuper(baseTransformation);
 		return (EntityTypeTransformation<Node, ObjectNode>) builder
 				.buildTypeTransformation();
 	}
@@ -234,17 +292,27 @@ public class GformEntityTypeFactory<T> {
 
 	
 
-	public EntityTypeTransformation<T, ObjectNode> getTransformation(String id) {
-		EntityType<ObjectNode> jsonType = jsonEntityTypeRepository
-				.getEntityType(id);
-		DerivedType<T, ObjectNode> derivedType = (DerivedType<T, ObjectNode>) jsonType
-				.getMetaType()
-				.getMetaAttribute(DerivedType.META_ATTRIBUTE_CODE)
-				.getValue(jsonType);
-		return derivedType.getTransformation();
+	public EntityTypeTransformation<T, ObjectNode> getTransformation(String jsonTypeCode) {
+		DynamicTypeTransformationBuilder<T, ObjectNode> builder = createBuilder(jsonTypeCode);
+		return (EntityTypeTransformation<T, ObjectNode>) builder.getReference();
+		
+		
+//		EntityType<ObjectNode> jsonType = jsonEntityTypeRepository
+//				.getEntityType(id);
+//		DerivedType<T, ObjectNode> derivedType = (DerivedType<T, ObjectNode>) jsonType
+//				.getMetaType()
+//				.getMetaAttribute(DerivedType.META_ATTRIBUTE_CODE)
+//				.getValue(jsonType);
+//		return derivedType.getTransformation();
 	}
+	
+	
 
 	public JavaConverter<?, ?> getConverter(String code) {
 		return null;
+	}
+
+	public <J> Type<J> getType(Class<J> clazz) {
+		return entityTypeRepository.getType(clazz);
 	}
 }
